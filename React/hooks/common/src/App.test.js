@@ -1,4 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
 import App from "./App";
 
 describe("App", () => {
@@ -10,27 +12,51 @@ describe("App", () => {
     expect(title).toBeInTheDocument();
   });
 
-  test("should focus on input", () => {
+  test("should render the checkbox, un-checked", () => {
     render(<App />);
 
-    const input = screen.getByLabelText("Name:");
+    const checkbox = screen.getByLabelText("Show Input");
 
-    expect(input).toHaveFocus();
+    expect(checkbox).not.toBeChecked();
   });
 
-  test("should update input value onChange", async () => {
+  test("should not render the input", () => {
     render(<App />);
 
-    const input = screen.getByLabelText("Name:");
+    const input = screen.queryByText("Name:");
 
-    const inputValue = "test";
+    expect(input).not.toBeInTheDocument();
+  });
 
-    fireEvent.change(input, { target: { value: inputValue } });
+  describe("when show input is true", () => {
+    test("should focus on input", async () => {
+      render(<App />);
 
-    await waitFor(() => screen.getByText(/Input value:/i));
+      const checkbox = screen.getByLabelText("Show Input");
 
-    expect(input.value).toBe(inputValue);
+      await userEvent.click(checkbox);
 
-    expect(screen.getByText(/Input value:/i)).toHaveTextContent(inputValue);
+      const input = screen.getByLabelText("Name:");
+
+      expect(input).toHaveFocus();
+    });
+
+    test("should update input value onChange", async () => {
+      render(<App />);
+
+      const checkbox = screen.getByLabelText("Show Input");
+
+      await userEvent.click(checkbox);
+
+      const input = screen.getByLabelText("Name:");
+
+      const inputValue = "test";
+
+      await userEvent.type(input, inputValue);
+
+      expect(input.value).toBe(inputValue);
+
+      expect(screen.getByText(/Input value:/i)).toHaveTextContent(inputValue);
+    });
   });
 });
