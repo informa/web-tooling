@@ -1,8 +1,19 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import { ThemeContext, themes } from "./App";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+const ContextObserver = () => (
+  <ThemeContext.Consumer>
+    {(value) => {
+      return <span>Received: {value.name}</span>;
+    }}
+  </ThemeContext.Consumer>
+);
+
+test("Theme shows value from provider", () => {
+  render(
+    <ThemeContext.Provider value={themes.light}>
+      <ContextObserver />
+    </ThemeContext.Provider>
+  );
+  expect(screen.getByText(/^Received:/)).toHaveTextContent("light");
 });

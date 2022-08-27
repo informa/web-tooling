@@ -1,7 +1,7 @@
 import React, { useContext, createContext, useState } from "react";
 import "./App.css";
 
-const themes = {
+export const themes = {
   light: {
     name: "light",
     foreground: "#000000",
@@ -15,7 +15,7 @@ const themes = {
 };
 
 // Create new context which holds themes.light by default
-const ThemeContext = createContext(themes.light);
+export const ThemeContext = createContext(themes.light);
 
 function App() {
   // Set ThemeContext via state
