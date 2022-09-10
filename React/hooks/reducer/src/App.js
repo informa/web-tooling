@@ -2,6 +2,7 @@ import React from "react";
 
 const initialState = {
   newName: "",
+  sort: "unsorted",
   names: [
     { id: "1", active: false, name: "Jon" },
     { id: "2", active: true, name: "Abby" },
@@ -15,27 +16,71 @@ function reducer(state, action) {
     case "TYPE_NAME":
       console.log("TYPE_NAME");
 
-      return state;
+      return { ...state, newName: action.value };
 
     case "TOGGLE_ACTIVE_ROW":
-      console.log("TOGGLE_ACTIVE_ROW");
+      console.log("TOGGLE_ACTIVE_ROW", action.id);
 
-      return state;
+      const newActiveRowState = state.names.map((name) => {
+        if (name.id === action.id) {
+          return {
+            ...name,
+            active: !name.active,
+          };
+        }
+
+        return name;
+      });
+
+      return { ...state, names: newActiveRowState };
 
     case "ADD_NAME":
-      console.log("ADD_NAME");
+      const newID = Array(4)
+        .fill()
+        .map((_) => String.fromCharCode(33 + Math.random() * (127 - 33)))
+        .join("");
 
-      return state;
+      const newAddNameState = [
+        ...state.names,
+        { id: newID, active: false, name: state.newName },
+      ];
+
+      return { ...state, newName: "", names: newAddNameState };
 
     case "REMOVE_NAME":
-      console.log("REMOVE_NAME");
+      console.log("REMOVE_NAME", action.id);
 
-      return state;
+      const newRemoveRowState = state.names.filter(
+        (name) => name.id !== action.id
+      );
+
+      return { ...state, names: newRemoveRowState };
 
     case "SORT_NAME":
       console.log("SORT_NAME");
 
-      return state;
+      const nextSort = {
+        unsorted: "ascending",
+        ascending: "descending",
+        descending: "ascending",
+      };
+
+      const newSort = nextSort[state.sort];
+
+      let sortedNames = state.names.sort(function (a, b) {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
+
+      const newSortedState =
+        newSort === "descending" ? sortedNames.reverse() : sortedNames;
+
+      return { ...state, sort: newSort, names: newSortedState };
 
     default:
       throw new Error();
@@ -43,46 +88,48 @@ function reducer(state, action) {
 }
 
 function App() {
-  const [data, setData] = React.useState(initialState);
-
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
   return (
     <div className="App">
       <table>
-        <tr>
-          <th>&nbsp;</th>
-          <th>ID</th>
-          <th>
-            Name
-            <button onClick={() => dispatch({ type: "SORT_NAME" })}>
-              sort
-            </button>
-          </th>
-          <th>Action</th>
-        </tr>
-        {data.names.map((name) => (
-          <tr key={name.id}>
-            <td>
-              <div>
-                <input
-                  type="checkbox"
-                  id={`${name.id}_active`}
-                  name="active"
-                  checked={name.active}
-                  onChange={() => dispatch({ type: "TOGGLE_ACTIVE_ROW" })}
-                />
-              </div>
-            </td>
-            <td>{name.id}</td>
-            <td>{name.name}</td>
-            <td>
-              <button onClick={() => dispatch({ type: "REMOVE_NAME" })}>
-                Remove
+        <thead>
+          <tr>
+            <th>&nbsp;</th>
+            <th>ID</th>
+            <th>
+              Name
+              <button onClick={() => dispatch({ type: "SORT_NAME" })}>
+                sort {state.sort}
               </button>
-            </td>
+            </th>
+            <th>Action</th>
           </tr>
-        ))}
+        </thead>
+        <tbody>
+          {state.names.map(({ active, id, name }) => (
+            <tr key={id}>
+              <td>
+                <div>
+                  <input
+                    type="checkbox"
+                    id={`${id}_active`}
+                    name="active"
+                    checked={active}
+                    onChange={() => dispatch({ type: "TOGGLE_ACTIVE_ROW", id })}
+                  />
+                </div>
+              </td>
+              <td>{id}</td>
+              <td>{name}</td>
+              <td>
+                <button onClick={() => dispatch({ type: "REMOVE_NAME", id })}>
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
 
       <form onSubmit={(e) => e.preventDefault()}>
@@ -93,10 +140,15 @@ function App() {
           id="name"
           name="name"
           value={state.newName}
-          // onChange={handleOnChange}
-          onChange={() => dispatch({ type: "TYPE_NAME" })}
+          onChange={({ target }) =>
+            dispatch({ type: "TYPE_NAME", value: target.value })
+          }
         />
-        <button type="submit" onClick={() => dispatch({ type: "ADD_NAME" })}>
+        <button
+          type="submit"
+          disabled={state.newName === ""}
+          onClick={() => dispatch({ type: "ADD_NAME" })}
+        >
           Add name
         </button>
       </form>
