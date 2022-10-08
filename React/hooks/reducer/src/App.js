@@ -1,6 +1,6 @@
 import React from "react";
 
-const initialState = {
+export const initialState = {
   newName: "",
   sort: "unsorted",
   names: [
@@ -11,15 +11,21 @@ const initialState = {
   ],
 };
 
-function reducer(state, action) {
+export const TYPE_NAME = "TYPE_NAME";
+export const TOGGLE_ACTIVE_ROW = "TOGGLE_ACTIVE_ROW";
+export const ADD_NAME = "ADD_NAME";
+export const REMOVE_NAME = "REMOVE_NAME";
+export const SORT_NAME = "SORT_NAME";
+
+export function reducer(state, action) {
   switch (action.type) {
-    case "TYPE_NAME":
-      console.log("TYPE_NAME");
+    case TYPE_NAME:
+      console.log(TYPE_NAME);
 
       return { ...state, newName: action.value };
 
-    case "TOGGLE_ACTIVE_ROW":
-      console.log("TOGGLE_ACTIVE_ROW", action.id);
+    case TOGGLE_ACTIVE_ROW:
+      console.log(TOGGLE_ACTIVE_ROW, action.id);
 
       const newActiveRowState = state.names.map((name) => {
         if (name.id === action.id) {
@@ -34,7 +40,7 @@ function reducer(state, action) {
 
       return { ...state, names: newActiveRowState };
 
-    case "ADD_NAME":
+    case ADD_NAME:
       const newID = Array(4)
         .fill()
         .map((_) => String.fromCharCode(33 + Math.random() * (127 - 33)))
@@ -47,8 +53,8 @@ function reducer(state, action) {
 
       return { ...state, newName: "", names: newAddNameState };
 
-    case "REMOVE_NAME":
-      console.log("REMOVE_NAME", action.id);
+    case REMOVE_NAME:
+      console.log(REMOVE_NAME, action.id);
 
       const newRemoveRowState = state.names.filter(
         (name) => name.id !== action.id
@@ -56,8 +62,8 @@ function reducer(state, action) {
 
       return { ...state, names: newRemoveRowState };
 
-    case "SORT_NAME":
-      console.log("SORT_NAME");
+    case SORT_NAME:
+      console.log(SORT_NAME);
 
       const nextSort = {
         unsorted: "ascending",
@@ -83,7 +89,7 @@ function reducer(state, action) {
       return { ...state, sort: newSort, names: newSortedState };
 
     default:
-      throw new Error();
+      return state;
   }
 }
 
