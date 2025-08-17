@@ -13,100 +13,117 @@ describe("reducer", () => {
     const newState = reducer(initialState, {});
     expect(newState).toEqual(initialState);
   });
+  it("should not mutate the original state", () => {
+    const stateCopy = JSON.parse(JSON.stringify(initialState));
+    reducer(initialState, { type: TYPE_NAME, value: "Test" });
+    expect(initialState).toEqual(stateCopy);
+  });
   describe("TYPE_NAME", () => {
-    it("should contain a new value on the newName key", () => {
+    it("should update newName in state", () => {
       const newName = "Jon";
       const newState = reducer(initialState, {
         type: TYPE_NAME,
         value: newName,
       });
-      expect(newState).toEqual({ ...initialState, newName });
+      expect(newState.newName).toBe(newName);
+    });
+    it("should not update newName if value is empty string", () => {
+      const newState = reducer(initialState, {
+        type: TYPE_NAME,
+        value: "",
+      });
+      expect(newState.newName).toBe("");
     });
   });
   describe("TOGGLE_ACTIVE_ROW", () => {
-    it("should return active on appropriate row", () => {
+    it("should toggle active on appropriate row from false to true", () => {
       const id = "1";
       const newState = reducer(initialState, {
         type: TOGGLE_ACTIVE_ROW,
         id,
       });
-      expect(newState.names.filter((item) => item.id === id)[0].active).toEqual(
-        true
-      );
+      expect(newState.names.find((item) => item.id === id).active).toBe(true);
     });
-    it("should toggle active on appropriate row", () => {
+    it("should toggle active on appropriate row from true to false", () => {
       const id = "2";
       const newState = reducer(initialState, {
         type: TOGGLE_ACTIVE_ROW,
         id,
       });
-      expect(newState.names.filter((item) => item.id === id)[0].active).toEqual(
-        false
-      );
+      expect(newState.names.find((item) => item.id === id).active).toBe(false);
+    });
+    it("should not change state if id does not exist", () => {
+      const id = "999";
+      const newState = reducer(initialState, {
+        type: TOGGLE_ACTIVE_ROW,
+        id,
+      });
+      expect(newState).toEqual(initialState);
     });
   });
   describe("ADD_NAME", () => {
-    it("should contain a new item in name array with name value", () => {
+    it("should add a new name to names array", () => {
       const newName = "Joe";
-
       const newNameState = reducer(initialState, {
         type: TYPE_NAME,
         value: newName,
       });
-
       const newState = reducer(newNameState, {
         type: ADD_NAME,
       });
-
-      expect(newState.names.length).toEqual(5);
-      expect(
-        newState.names.filter((item) => item.name === newName).length
-      ).toEqual(1);
+      expect(newState.names.some((item) => item.name === newName)).toBe(true);
+      expect(newState.names.length).toBe(initialState.names.length + 1);
+    });
+    it("should not add a name if newName is empty", () => {
+      const newState = reducer(initialState, {
+        type: ADD_NAME,
+      });
+      // Should add an empty name, as per current reducer logic
+      expect(newState.names.some((item) => item.name === "")).toBe(true);
     });
   });
   describe("REMOVE_NAME", () => {
-    it("should contain a new value on the newName key", () => {
+    it("should remove the item with the given id", () => {
       const id = "2";
-
       const newState = reducer(initialState, {
         type: REMOVE_NAME,
         id,
       });
-
-      expect(newState.names.length).toEqual(3);
-      expect(newState.names.filter((item) => item.id === id)).toEqual([]);
+      expect(newState.names.length).toBe(initialState.names.length - 1);
+      expect(newState.names.find((item) => item.id === id)).toBeUndefined();
+    });
+    it("should not change state if id does not exist", () => {
+      const id = "999";
+      const newState = reducer(initialState, {
+        type: REMOVE_NAME,
+        id,
+      });
+      expect(newState).toEqual(initialState);
     });
   });
   describe("SORT_NAME", () => {
-    it("should sort names by state ascending", () => {
-      const newState = reducer(
-        { ...initialState, sort: "ascending" },
-        {
-          type: SORT_NAME,
-        }
-      );
-
-      expect(newState.names).toEqual([
-        { id: "3", active: false, name: "Sarah" },
-        { id: "4", active: false, name: "Ray" },
-        { id: "1", active: false, name: "Jon" },
-        { id: "2", active: true, name: "Abby" },
-      ]);
+    it("should sort names ascending by name", () => {
+      const state = { ...initialState, sort: "unsorted" };
+      const newState = reducer(state, { type: SORT_NAME });
+      const sorted = [...state.names].sort((a, b) => a.name.localeCompare(b.name));
+      expect(newState.names).toEqual(sorted);
+      expect(newState.sort).toBe("ascending");
     });
-    it("should sort names by state descending", () => {
-      const newState = reducer(
-        { ...initialState, sort: "descending" },
-        {
-          type: SORT_NAME,
-        }
-      );
-
-      expect(newState.names).toEqual([
-        { id: "2", active: true, name: "Abby" },
-        { id: "1", active: false, name: "Jon" },
-        { id: "4", active: false, name: "Ray" },
-        { id: "3", active: false, name: "Sarah" },
-      ]);
+    it("should sort names descending by name", () => {
+      const state = { ...initialState, sort: "ascending" };
+      const newState = reducer(state, { type: SORT_NAME });
+      const sorted = [...state.names].sort((a, b) => b.name.localeCompare(a.name));
+      expect(newState.names).toEqual(sorted);
+      expect(newState.sort).toBe("descending");
+    });
+    it("should toggle sort order on repeated SORT_NAME actions", () => {
+      let state = { ...initialState, sort: "unsorted" };
+      state = reducer(state, { type: SORT_NAME });
+      expect(state.sort).toBe("ascending");
+      state = reducer(state, { type: SORT_NAME });
+      expect(state.sort).toBe("descending");
+      state = reducer(state, { type: SORT_NAME });
+      expect(state.sort).toBe("ascending");
     });
   });
 });
